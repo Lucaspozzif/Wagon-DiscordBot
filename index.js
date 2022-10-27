@@ -1,5 +1,7 @@
-const { Events, Client, GatewayIntentBits } = require("discord.js");
-const { token } = require("./secret/token.json");
+const fs = require("node:fs");
+const path = require("node:path");
+const { Client, GatewayIntentBits, Collection } = require("discord.js");
+const { token } = require("./secret/config.json");
 
 const client = new Client({
   intents: [
@@ -8,26 +10,32 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
   ],
-
-});
-client.once(Events.ClientReady, (client) => {
-  console.log(`Starting content, logged as ${client.user.tag}`);
 });
 
-let signatures = 0;
-let signators = [];
-client.on(Events.MessageCreate, (msg) => {
-  if ( msg.content.toLowerCase() == "eros" && !signators.includes(msg.author.username)) {
-    signatures++;
-    signators.push(msg.author.username)
-    msg.reply(
-      `${msg.author.username} concordou em assinar a petição que afirma que Eros é gay\nJá são ${signatures} assinaturas`
-    );
-  } else if (msg.content.toLowerCase() == "eros" && signators.includes(msg.author.username)) {
-    msg.reply(
-      `${msg.author.username} reenfatizou que eros é gay, mesmo já tendo dito isso antes.\nKkkkk mto gay`
-    );
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, "commands");
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = require(filePath);
+  client.commands.set(command.data.name, command);
+}
+
+const eventsPath = path.join(__dirname, "events");
+const eventFiles = fs
+  .readdirSync(eventsPath)
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = require(filePath);
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
   }
-});
-
+}
 client.login(token);
