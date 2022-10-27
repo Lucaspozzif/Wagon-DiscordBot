@@ -46,7 +46,6 @@ module.exports = {
 
     const command = int.client.commands.get(int.commandName);
 
-    console.log(command)
     if (!command) {
       await int.reply("Não encontrei esse comando.");
       return;
