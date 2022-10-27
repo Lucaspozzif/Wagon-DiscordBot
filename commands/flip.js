@@ -48,6 +48,13 @@ module.exports = {
     });
 
     collector.on("collect", async (i) => {
+      if (amount > users[interaction.user.id].gold)
+      return interaction.editReply({
+        content: `Que pena, você não possui $${amount} :confused: tente com um valor menor\nDinheiro disponível em sua conta: $${
+          users[interaction.user.id].gold
+        } :coin:`,
+        ephemeral: true,
+      });
       const side = Math.round(Math.random());
       var icon = "";
       await i.update({ content: "Girando..." });
